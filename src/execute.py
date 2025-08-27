@@ -15,6 +15,8 @@ def load_data(filename):
             labels.append([label])
     X = np.array(data)
     y = np.array(labels)
+
+    X = (X - X.mean(axis=0)) / X.std(axis=0)
     return X, y
 
 def train_test_split(X, y, train_ratio=0.8):
