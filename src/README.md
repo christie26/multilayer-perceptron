@@ -5,3 +5,9 @@ number of input parameters
 
 ## Regex
 (?<=^[^,]*,[^,]*,[^,]*,[^,]*,[^,]*),.*
+
+## feedforward
+
+## backpropagation
+
+## gradient descent
