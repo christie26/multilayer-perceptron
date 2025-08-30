@@ -1,1 +1,6 @@
 .venv/*
+data*
+*.npy
+*.npz
+*.txt
+__pycache__

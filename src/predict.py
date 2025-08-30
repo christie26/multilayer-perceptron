@@ -1,48 +1,44 @@
 import numpy as np
 from mlp import MLP
 
-def load_model(filename):
-    with open(filename, "rb") as f:
-        weights1 = np.load(f)
-        weights2 = np.load(f)
-        bias1 = np.load(f)
-        bias2 = np.load(f)
-    return weights1, weights2, bias1, bias2
 
-def load_data(filename):
-    data = []
-    with open(filename, "r") as f:
-        for line in f:
-            parts = line.strip().split(",")
-            if len(parts) < 32:
-                continue
-            features = list(map(float, parts[1:]))  # Assuming no labels in prediction mode
-            data.append(features)
-    return np.array(data)
+def load_model(filename):
+    try:
+        data = np.load(filename, allow_pickle=True)
+        weights = []
+        biases = []
+        for key in sorted(data.files):
+            if key.startswith("weight"):
+                weights.append(data[key])
+            elif key.startswith("bias"):
+                biases.append(data[key])
+        mlp = MLP(
+            number_hidden_layer=len(weights) - 1,
+            input_size=weights[0].shape[0],
+            hidden_sizes=[w.shape[1] for w in weights[:-1]],
+            output_size=weights[-1].shape[1],
+            learning_rate=0.01,
+        )
+        mlp.weights = list(weights)
+        mlp.biases = list(biases)
+        return mlp
+    except FileNotFoundError:
+        print(f"❌ Model file '{filename}' not found.")
+        return None, None
+
 
 if __name__ == "__main__":
-    # Load the trained model's parameters
-    weights1, weights2, bias1, bias2 = load_model("mlp_model.npy")
+    test = np.load("data_test.npz")
+    X_test, y_test = test["X"], test["y"]
 
-    # Prepare the MLP model
-    input_size = 30  # Adjust according to the input features
-    hidden_size1 = 5
-    hidden_size2 = 10
-    output_size = 1
-    mlp = MLP(input_size, hidden_size1, hidden_size2, output_size, learning_rate=0)
+    mlp = load_model("mlp_model.npz")
 
-    # Manually assign the weights and biases to the MLP model
-    mlp.weights1 = weights1
-    mlp.weights2 = weights2
-    mlp.bias1 = bias1
-    mlp.bias2 = bias2
-
-    # Load new data for prediction
-    X_new = load_data("new_data.csv")  # Use the filename of your new data
-
-    # Make predictions
-    print("\n🔍 Predictions:")
-    for i, x in enumerate(X_new):
-        output = mlp.forward(x)
+    correct = 0
+    for i in range(len(X_test)):
+        output = mlp.forward(X_test[i])
         predicted_label = 1 if output >= 0.5 else 0
-        print(f"Input {i+1}: Predicted={predicted_label}, Raw Output={output.round(3)}")
+        actual_label = y_test[i][0]
+        correct += predicted_label == actual_label
+
+    accuracy = correct / len(X_test) * 100 if len(X_test) > 0 else 0
+    print(f"✅ Accuracy on Test Set: {accuracy:.2f}%")
