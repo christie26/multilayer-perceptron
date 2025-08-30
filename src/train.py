@@ -1,3 +1,4 @@
+# train.py
 import numpy as np
 from mlp import MLP
 
@@ -28,26 +29,27 @@ def train_test_split(X, y, train_ratio=0.8):
     test_idx = indices[num_train:]
     return X[train_idx], y[train_idx], X[test_idx], y[test_idx]
 
+def save_model(model, filename):
+    with open(filename, "wb") as f:
+        for i in range(len(model.weights)):
+            np.save(f, model.weights[i])
+            np.save(f, model.biases[i])
+
 if __name__ == "__main__":
     X, y = load_data("data.csv")
-    
     X_train, y_train, X_test, y_test = train_test_split(X, y, train_ratio=0.8)
 
     input_size = X.shape[1]
-    hidden_size1 = 5
-    hidden_size2 = 10
+    number_hidden_layer = 2
+    hidden_sizes = [5,10]
     output_size = 1
     learning_rate = 0.01
     epochs = 10000
 
-    mlp = MLP(input_size=input_size, hidden_size1=hidden_size1, hidden_size2=hidden_size2, output_size=output_size, learning_rate=learning_rate)
+    mlp = MLP(number_hidden_layer = number_hidden_layer, input_size=input_size, hidden_sizes=hidden_sizes, output_size=output_size, learning_rate=learning_rate)
     mlp.train(X_train, y_train, epochs=epochs)
 
-    print(f"\n🔍 Evaluation on Test Set")
-    print(f"➡ Epochs: {epochs}")
-    print(f"➡ Learning Rate: {learning_rate}")
-    print(f"\nPredictions:")
-
+    # Evaluation on the test set
     correct = 0
     for i in range(len(X_test)):
         output = mlp.forward(X_test[i])
@@ -55,17 +57,18 @@ if __name__ == "__main__":
         actual_label = y_test[i][0]
         is_correct = predicted_label == actual_label
         correct += is_correct
-        print(f"Input {i+1}: Predicted={predicted_label}, Actual={actual_label}, Raw={output.round(3)}, {'✅' if is_correct else '❌'}")
 
     accuracy = correct / len(X_test) * 100 if len(X_test) > 0 else 0
-    print(f"➡ Epochs: {epochs}")
-    print(f"➡ Learning Rate: {learning_rate}")
-    print(f"\n✅ Accuracy on Test Set: {accuracy:.2f}%")
+    print(f"✅ Accuracy on Test Set: {accuracy:.2f}%")
 
+    # Save model weights to file
+    save_model(mlp, "mlp_model.npy")
+
+    # Log training session details
     with open("training_log.txt", "a") as log_file:
         log_file.write("Training Session\n")
         log_file.write(f"Epochs: {epochs}\n")
         log_file.write(f"Learning Rate: {learning_rate}\n")
-        log_file.write(f"Hidden Layer Neurons: {hidden_size1}, {hidden_size2}\n")
+        log_file.write(f"Hidden Layer Neurons: {hidden_sizes[0]}, {hidden_sizes[1]}\n")
         log_file.write(f"Test Accuracy: {accuracy:.2f}%\n")
         log_file.write("-" * 30 + "\n")

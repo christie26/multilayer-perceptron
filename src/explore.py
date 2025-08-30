@@ -6,9 +6,7 @@ from sklearn.model_selection import train_test_split
 # Column names
 columns = ["id", "diagnosis"] + [f"feature{i}" for i in range(1, 31)]
 
-# Load CSV (first 20 rows)
 df = pd.read_csv("data.csv", names=columns)
-df = df.head(20)
 
 # Basic info
 print(f"Data size: {df.shape}\n")
