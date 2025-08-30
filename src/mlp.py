@@ -1,5 +1,6 @@
 import numpy as np
 
+
 # Activation and its derivative
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
@@ -10,20 +11,31 @@ def sigmoid_derivative(x):
 
 
 class MLP:
-    def __init__(self, number_hidden_layer: int, input_size: int, hidden_sizes: list[int], output_size: int, learning_rate=0.1):
+    def __init__(
+        self,
+        number_hidden_layer: int,
+        input_size: int,
+        hidden_sizes: list[int],
+        output_size: int,
+        learning_rate=0.1,
+    ):
         self.learning_rate = learning_rate
 
-        # Validate the number of hidden layers
         if number_hidden_layer != len(hidden_sizes):
-            raise ValueError(f"Number of hidden layers ({number_hidden_layer}) does not match the length of hidden_sizes ({len(hidden_sizes)}).")
+            raise ValueError(
+                f"Number of hidden layers ({number_hidden_layer}) does not match the length of hidden_sizes ({len(hidden_sizes)})."
+            )
 
         layer_sizes = [input_size] + hidden_sizes + [output_size]
-        
+
         weights, biases = self.initialize_weights(layer_sizes)
 
-        self.weights = [weights[i].T for i in range(len(weights))]  # Transpose weights to match dimensionality
-        self.biases = [biases[i].T for i in range(len(biases))]      # Transpose biases to match dimensionality
+        self.weights = [weights[i].T for i in range(len(weights))]
+        self.biases = [biases[i].T for i in range(len(biases))]
 
+        # for weights in self.weights:
+        #     print(weights.shape)
+        # print("----------------------")
 
     def initialize_weights(self, layer_sizes, initialization="he"):
         """
@@ -55,18 +67,17 @@ class MLP:
             else:
                 raise ValueError("Unsupported initialization method")
 
-            b = np.zeros((fan_out, 1))  # biases usually start at 0
+            b = np.zeros((fan_out, 1))
 
             weights.append(W)
             biases.append(b)
 
         return weights, biases
+
     def forward(self, X):
-        # Store inputs and activations for each layer
         self.inputs = [X]
         self.activations = []
 
-        # Input -> Hidden Layers -> Output
         for i in range(len(self.weights)):
             input_layer = np.dot(self.inputs[-1], self.weights[i]) + self.biases[i]
             activation_layer = sigmoid(input_layer)
@@ -76,16 +87,18 @@ class MLP:
         return self.activations[-1]
 
     def backward(self, X, y, output):
-        # Compute the error for the output layer
         error = y - output
         delta = error * sigmoid_derivative(output)
 
-        # Backpropagate the error through the hidden layers
         for i in reversed(range(len(self.weights))):
-            delta = delta.dot(self.weights[i].T) * sigmoid_derivative(self.activations[i])
-            # Update weights and biases for each layer
+
             self.weights[i] += self.inputs[i].T.dot(delta) * self.learning_rate
             self.biases[i] += np.sum(delta, axis=0, keepdims=True) * self.learning_rate
+
+            if i != 0:
+                delta = delta.dot(self.weights[i].T) * sigmoid_derivative(
+                    self.activations[i - 1]
+                )
 
     def train(self, X, y, epochs=10000):
         for epoch in range(epochs):
@@ -93,7 +106,5 @@ class MLP:
             self.backward(X, y, output)
 
             if epoch % 1000 == 0:
-                loss = np.mean((y - output) ** 2)  # Mean Squared Error loss
+                loss = np.mean((y - output) ** 2)
                 print(f"Epoch {epoch}, Loss: {loss:.4f}")
-
-        # return self.weights, self.biases
