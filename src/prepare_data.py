@@ -58,10 +58,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     X, y = load_data(args.data)
-    X_train, y_train, X_test, y_test = train_test_split(X, y, args.train_ratio)
+    X_train, y_train, X_val, y_val = train_test_split(X, y, args.train_ratio)
 
     np.savez("data_train.npz", X=X_train, y=y_train)
-    np.savez("data_val.npz", X=X_test, y=y_test)
+    np.savez("data_val.npz", X=X_val, y=y_val)
     print(
         f"filename: {args.data}\ntrain_ratio: {args.train_ratio}\n✅ Saved data_train.npz and data_val.npz"
     )
