@@ -16,7 +16,7 @@ def save_model(model, filename):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train MLP model")
     parser.add_argument("--epochs", type=int, default=100)
-    parser.add_argument("--batchsize", type=int, default=32)
+    parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--lr", type=float, default=0.01)
     parser.add_argument("--hidden", nargs="+", type=int, default=[5, 10])
     parser.add_argument("--model", type=str, default="mlp_model.npz")
@@ -26,6 +26,7 @@ if __name__ == "__main__":
     val = np.load("data_val.npz")
     X_train, y_train = train["X"], train["y"]
     X_val, y_val = val["X"], val["y"]
+    # print(f"X_val: {X_val}, y_val: {y_val}")
 
     input_size = X_train.shape[1]
     mlp = MLP(
@@ -34,11 +35,10 @@ if __name__ == "__main__":
         hidden_sizes=args.hidden,
         output_size=1,
         learning_rate=args.lr,
+        batch_size=args.batch_size,
     )
 
-    mlp.train(
-        X_train, y_train, X_val, y_val, epochs=args.epochs, batch_size=args.batchsize
-    )
+    mlp.train(X_train, y_train, X_val, y_val, epochs=args.epochs)
     mlp.plot_metrics()
 
     save_model(mlp, args.model)
