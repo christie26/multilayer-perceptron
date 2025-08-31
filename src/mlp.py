@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 # Activation and its derivative
@@ -8,6 +9,12 @@ def sigmoid(x):
 
 def sigmoid_derivative(x):
     return x * (1 - x)
+
+
+def accuracy(y_true, y_pred):
+    predictions = (y_pred > 0.5).astype(int)
+    correct = np.sum(predictions == y_true)
+    return correct / len(y_true)
 
 
 class MLP:
@@ -100,11 +107,91 @@ class MLP:
                     self.activations[i - 1]
                 )
 
-    def train(self, X, y, epochs=10000):
-        for epoch in range(epochs):
-            output = self.forward(X)
-            self.backward(X, y, output)
+    def train(
+        self,
+        X,
+        y,
+        X_val=None,
+        y_val=None,
+        epochs=10000,
+        batch_size=32,
+        shuffle=True,
+    ):
+        n_samples = X.shape[0]
 
-            if epoch % 1000 == 0:
-                loss = np.mean((y - output) ** 2)
-                print(f"Epoch {epoch}, Loss: {loss:.4f}")
+        self.train_loss_history = []
+        self.train_acc_history = []
+        self.val_loss_history = []
+        self.val_acc_history = []
+
+        for epoch in range(epochs):
+            if shuffle:
+                indices = np.arange(n_samples)
+                np.random.shuffle(indices)
+                X = X[indices]
+                y = y[indices]
+
+            # ---- Mini-batch training ----
+            for start in range(0, n_samples, batch_size):
+                end = start + batch_size
+                X_batch = X[start:end]
+                y_batch = y[start:end]
+
+                output = self.forward(X_batch)
+                self.backward(X_batch, y_batch, output)
+
+            # ---- Metrics after epoch ----
+            # Train metrics
+            train_output = self.forward(X)
+            train_loss = np.mean((y - train_output) ** 2)
+            train_acc = accuracy(y, train_output)
+            self.train_loss_history.append(train_loss)
+            self.train_acc_history.append(train_acc)
+
+            # Validation metrics (if provided)
+            if X_val is not None and y_val is not None:
+                val_output = self.forward(X_val)
+                val_loss = np.mean((y_val - val_output) ** 2)
+                val_acc = accuracy(y_val, val_output)
+                self.val_loss_history.append(val_loss)
+                self.val_acc_history.append(val_acc)
+
+            if epoch % 10 == 0:
+                if X_val is not None:
+                    print(
+                        f"Epoch {epoch}, Train Loss: {train_loss:.4f}, "
+                        f"Train Acc: {train_acc:.4f}, "
+                        f"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}"
+                    )
+                else:
+                    print(
+                        f"Epoch {epoch}, Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.4f}"
+                    )
+
+    def plot_metrics(self):
+        import matplotlib.pyplot as plt
+
+        plt.figure(figsize=(12, 5))
+
+        # ---- Loss curve ----
+        plt.subplot(1, 2, 1)
+        plt.plot(self.train_loss_history, label="Train Loss")
+        if len(self.val_loss_history) > 0:
+            plt.plot(self.val_loss_history, label="Validation Loss")
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss")
+        plt.title("Loss Curve")
+        plt.legend()
+
+        # ---- Accuracy curve ----
+        plt.subplot(1, 2, 2)
+        plt.plot(self.train_acc_history, label="Train Accuracy")
+        if len(self.val_acc_history) > 0:
+            plt.plot(self.val_acc_history, label="Validation Accuracy")
+        plt.xlabel("Epoch")
+        plt.ylabel("Accuracy")
+        plt.title("Accuracy Curve")
+        plt.legend()
+
+        plt.tight_layout()
+        plt.show()

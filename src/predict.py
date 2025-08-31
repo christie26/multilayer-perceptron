@@ -28,7 +28,7 @@ def load_model(filename):
 
 
 if __name__ == "__main__":
-    test = np.load("data_test.npz")
+    test = np.load("data_val.npz")
     X_test, y_test = test["X"], test["y"]
 
     mlp = load_model("mlp_model.npz")

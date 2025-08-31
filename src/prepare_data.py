@@ -61,7 +61,7 @@ if __name__ == "__main__":
     X_train, y_train, X_test, y_test = train_test_split(X, y, args.train_ratio)
 
     np.savez("data_train.npz", X=X_train, y=y_train)
-    np.savez("data_test.npz", X=X_test, y=y_test)
+    np.savez("data_val.npz", X=X_test, y=y_test)
     print(
-        f"filename: {args.data}\ntrain_ratio: {args.train_ratio}\n✅ Saved data_train.npz and data_test.npz"
+        f"filename: {args.data}\ntrain_ratio: {args.train_ratio}\n✅ Saved data_train.npz and data_val.npz"
     )
