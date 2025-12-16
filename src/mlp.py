@@ -11,6 +11,11 @@ def sigmoid_derivative(x):
     return x * (1 - x)
 
 
+def softmax(x):
+    exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))  # overflow 방지
+    return exp_x / np.sum(exp_x, axis=1, keepdims=True)
+
+
 def accuracy(y_true, y_pred):
     predictions = (y_pred > 0.5).astype(int)
     correct = np.sum(predictions == y_true)
@@ -25,8 +30,10 @@ class MLP:
         hidden_sizes: list[int],
         output_size: int,
         learning_rate=0.1,
+        batch_size=32,
     ):
         self.learning_rate = learning_rate
+        self.batch_size = batch_size
 
         if number_hidden_layer != len(hidden_sizes):
             raise ValueError(
@@ -107,6 +114,27 @@ class MLP:
                     self.activations[i - 1]
                 )
 
+    def predict(self, X):
+        """
+        Predict class probabilities and final class for input X.
+        Returns:
+            probs: softmax probabilities for each class
+            pred_class: predicted class index (argmax)
+        """
+        a = X
+        # 은닉층 forward
+        for i in range(len(self.weights) - 1):
+            z = np.dot(a, self.weights[i]) + self.biases[i]
+            a = sigmoid(z)
+
+        # 출력층 forward + softmax
+        z_out = np.dot(a, self.weights[-1]) + self.biases[-1]
+        probs = softmax(z_out)
+        pred_class = np.argmax(probs, axis=1)
+
+        print(f"probs: {probs}")
+        return probs, pred_class
+
     def train(
         self,
         X,
@@ -114,7 +142,6 @@ class MLP:
         X_val=None,
         y_val=None,
         epochs=10000,
-        batch_size=32,
         shuffle=True,
     ):
         n_samples = X.shape[0]
@@ -132,8 +159,8 @@ class MLP:
                 y = y[indices]
 
             # ---- Mini-batch training ----
-            for start in range(0, n_samples, batch_size):
-                end = start + batch_size
+            for start in range(0, n_samples, self.batch_size):
+                end = start + self.batch_size
                 X_batch = X[start:end]
                 y_batch = y[start:end]
 
@@ -169,7 +196,15 @@ class MLP:
                     )
 
     def plot_metrics(self):
-        import matplotlib.pyplot as plt
+
+        hidden_layers = len(self.weights) - 1  # exclude output layer
+        hidden_sizes = [
+            w.shape[1] for w in self.weights[:-1]
+        ]  # number of neurons in each hidden layer
+        hidden_layer_info = f"Hidden Layers: {hidden_layers}, Sizes: {hidden_sizes}"
+        learning_info = (
+            f", Batch Size: {self.batch_size}, Learning rate: {self.learning_rate}"
+        )
 
         plt.figure(figsize=(12, 5))
 
@@ -180,7 +215,7 @@ class MLP:
             plt.plot(self.val_loss_history, label="Validation Loss")
         plt.xlabel("Epoch")
         plt.ylabel("Loss")
-        plt.title("Loss Curve")
+        plt.title(f"Loss Curve\n{hidden_layer_info}\n{learning_info}")
         plt.legend()
 
         # ---- Accuracy curve ----
@@ -190,7 +225,7 @@ class MLP:
             plt.plot(self.val_acc_history, label="Validation Accuracy")
         plt.xlabel("Epoch")
         plt.ylabel("Accuracy")
-        plt.title("Accuracy Curve")
+        plt.title(f"Accuracy Curve\n{hidden_layer_info}\n{learning_info}")
         plt.legend()
 
         plt.tight_layout()

@@ -29,16 +29,23 @@ def load_model(filename):
 
 if __name__ == "__main__":
     test = np.load("data_val.npz")
-    X_test, y_test = test["X"], test["y"]
-
+    X_val, y_val = test["X"], test["y"]
     mlp = load_model("mlp_model.npz")
+    actual_labels = y_val.flatten()
 
-    correct = 0
-    for i in range(len(X_test)):
-        output = mlp.forward(X_test[i])
-        predicted_label = 1 if output >= 0.5 else 0
-        actual_label = y_test[i][0]
-        correct += predicted_label == actual_label
+    # Predict with sigmoid ================================
+    outputs = mlp.forward(X_val).flatten()
+    print(f"from sigmoid {outputs}")
+    predicted_labels = (outputs >= 0.5).astype(int)
+    correct = (predicted_labels == actual_labels).sum()
 
-    accuracy = correct / len(X_test) * 100 if len(X_test) > 0 else 0
-    print(f"✅ Accuracy on Test Set: {accuracy:.2f}%")
+    accuracy = correct / len(X_val) * 100 if len(X_val) > 0 else 0
+    print(f"✅ Accuracy with sigmoid: {accuracy:.2f}%")
+
+    # Predict with softmax ================================
+    probs, pred_classes = mlp.predict(X_val)
+    print(f"from softmax {pred_classes}")
+
+    correct = np.sum(pred_classes == actual_labels)
+    accuracy = correct / len(X_val) * 100 if len(X_val) > 0 else 0
+    print(f"✅ Accuracy with softmax: {accuracy:.2f}%")
