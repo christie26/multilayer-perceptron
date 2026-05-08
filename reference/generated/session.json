@@ -1,0 +1,16 @@
+{
+    "dataset": "data.csv",
+    "train_path": "data_training.csv",
+    "val_path": "data_test.csv",
+    "epochs": 70,
+    "batch_size": 16,
+    "learning_rate": 0.01,
+    "layer": [
+        6,
+        8,
+        9
+    ],
+    "split": 0.2,
+    "patience": 3,
+    "adam": false
+}
