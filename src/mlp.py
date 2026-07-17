@@ -12,7 +12,7 @@ def sigmoid_derivative(x):
 
 
 def softmax(x):
-    exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))  # overflow 방지
+    exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))  # prevent overflow
     return exp_x / np.sum(exp_x, axis=1, keepdims=True)
 
 
@@ -46,10 +46,6 @@ class MLP:
 
         self.weights = [weights[i].T for i in range(len(weights))]
         self.biases = [biases[i].T for i in range(len(biases))]
-
-        # for weights in self.weights:
-        #     print(weights.shape)
-        # print("----------------------")
 
     def initialize_weights(self, layer_sizes, initialization="he"):
         """
@@ -122,17 +118,16 @@ class MLP:
             pred_class: predicted class index (argmax)
         """
         a = X
-        # 은닉층 forward
+        # hidden layers forward
         for i in range(len(self.weights) - 1):
             z = np.dot(a, self.weights[i]) + self.biases[i]
             a = sigmoid(z)
 
-        # 출력층 forward + softmax
+        # output layer forward + softmax
         z_out = np.dot(a, self.weights[-1]) + self.biases[-1]
         probs = softmax(z_out)
         pred_class = np.argmax(probs, axis=1)
 
-        print(f"probs: {probs}")
         return probs, pred_class
 
     def train(

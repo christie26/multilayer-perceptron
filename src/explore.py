@@ -1,3 +1,5 @@
+import argparse
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -6,43 +8,54 @@ from sklearn.model_selection import train_test_split
 # Column names
 columns = ["id", "diagnosis"] + [f"feature{i}" for i in range(1, 31)]
 
-df = pd.read_csv("data.csv", names=columns)
 
-# Basic info
-print(f"Data size: {df.shape}\n")
-df.info()
-df.describe()
+def main():
+    parser = argparse.ArgumentParser(description="Explore the dataset")
+    parser.add_argument("--data", type=str, default="data.csv", help="Input CSV file")
+    parser.add_argument(
+        "--test_size", type=float, default=0.2, help="Validation split ratio"
+    )
+    args = parser.parse_args()
 
-# Check diagnosis value distribution
-print("\nDiagnosis value counts:\n", df["diagnosis"].value_counts())
+    df = pd.read_csv(args.data, names=columns)
 
-# Diagnosis distribution visualization
-sns.countplot(x="diagnosis", data=df)
-plt.title("Diagnosis Distribution (M=Malignant, B=Benign)")
-plt.show()
+    # Basic info
+    print(f"Data size: {df.shape}\n")
+    df.info()
+    df.describe()
 
-# Correlation heatmap
-plt.figure(figsize=(12, 10))
+    # Check diagnosis value distribution
+    print("\nDiagnosis value counts:\n", df["diagnosis"].value_counts())
 
-numeric_df = df.select_dtypes(include=["float64", "int64"])
+    # Diagnosis distribution visualization
+    sns.countplot(x="diagnosis", data=df)
+    plt.title("Diagnosis Distribution (M=Malignant, B=Benign)")
+    plt.show()
 
-corr = numeric_df.corr()
-sns.heatmap(corr, cmap="coolwarm", center=0)
-plt.title("Feature Correlation Heatmap")
-plt.show()
+    # Correlation heatmap
+    plt.figure(figsize=(12, 10))
+    numeric_df = df.select_dtypes(include=["float64", "int64"])
+    corr = numeric_df.corr()
+    sns.heatmap(corr, cmap="coolwarm", center=0)
+    plt.title("Feature Correlation Heatmap")
+    plt.show()
 
-# Example feature distribution (radius_mean)
-sns.histplot(data=df, x="feature1", hue="diagnosis", kde=True)
-plt.title("Feature1 Distribution by Diagnosis")
-plt.show()
+    # Example feature distribution (radius_mean)
+    sns.histplot(data=df, x="feature1", hue="diagnosis", kde=True)
+    plt.title("Feature1 Distribution by Diagnosis")
+    plt.show()
 
-# Train/validation split
-X = df.drop(columns=["diagnosis"])  # Features
-y = df["diagnosis"].map({"M": 1, "B": 0})  # Convert M=1, B=0
+    # Train/validation split
+    X = df.drop(columns=["diagnosis"])  # Features
+    y = df["diagnosis"].map({"M": 1, "B": 0})  # Convert M=1, B=0
 
-X_train, X_val, y_train, y_val = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
-)
+    X_train, X_val, y_train, y_val = train_test_split(
+        X, y, test_size=args.test_size, random_state=42, stratify=y
+    )
 
-print("Training data size:", X_train.shape)
-print("Validation data size:", X_val.shape)
+    print("Training data size:", X_train.shape)
+    print("Validation data size:", X_val.shape)
+
+
+if __name__ == "__main__":
+    main()
