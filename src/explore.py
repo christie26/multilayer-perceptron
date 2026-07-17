@@ -27,17 +27,6 @@ def main():
     # Check diagnosis value distribution
     print("\nDiagnosis value counts:\n", df["diagnosis"].value_counts())
 
-    # Train/validation split
-    X = df.drop(columns=["diagnosis"])  # Features
-    y = df["diagnosis"].map({"M": 1, "B": 0})  # Convert M=1, B=0
-
-    X_train, X_val, _, _ = train_test_split(
-        X, y, test_size=args.test_size, random_state=42, stratify=y
-    )
-
-    print("Training data size:", X_train.shape)
-    print("Validation data size:", X_val.shape)
-
     # Diagnosis distribution visualization
     sns.countplot(x="diagnosis", data=df)
     plt.title("Diagnosis Distribution (M=Malignant, B=Benign)")

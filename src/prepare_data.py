@@ -24,8 +24,10 @@ def main():
     np.savez(args.train_out, X=X_train, y=y_train)
     np.savez(args.val_out, X=X_val, y=y_val)
     print(
-        f"filename: {args.data}\ntrain_ratio: {args.train_ratio}\n"
-        f"✅ Saved {args.train_out} and {args.val_out}"
+        f"Total dataset: {len(X)}\n"
+        f"train_ratio: {args.train_ratio}\n"
+        f"Saved {args.train_out}, {len(X_train)}\n"
+        f"Saved {args.val_out}, {len(X_val)}"
     )
 
 
