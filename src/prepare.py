@@ -16,10 +16,13 @@ def main():
     parser.add_argument(
         "--val_out", type=str, default="data_val.npz", help="Output validation file"
     )
+    parser.add_argument(
+        "--seed", type=int, default=42, help="Random seed to shuffle"
+    )
     args = parser.parse_args()
 
     X, y = load_data(args.data)
-    X_train, y_train, X_val, y_val = train_test_split(X, y, args.train_ratio)
+    X_train, y_train, X_val, y_val = train_test_split(X, y, args.train_ratio, args.seed)
 
     np.savez(args.train_out, X=X_train, y=y_train)
     np.savez(args.val_out, X=X_val, y=y_val)

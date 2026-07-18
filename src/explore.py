@@ -3,7 +3,6 @@ import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import train_test_split
 
 # Column names
 columns = ["id", "diagnosis"] + [f"feature{i}" for i in range(1, 31)]

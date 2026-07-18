@@ -41,12 +41,14 @@ def load_data(filename):
     return X, y
 
 
-def train_test_split(X, y, train_ratio=0.8):
+def train_test_split(X, y, train_ratio=0.8, seed=42):
     """Randomly split X, y into train and validation subsets."""
     num_samples = len(X)
     num_train = int(num_samples * train_ratio)
-
-    indices = np.random.permutation(num_samples)
+    
+    rng = np.random.default_rng(seed=seed)
+    indices= rng.permutation(num_samples)
+    
     train_idx = indices[:num_train]
     test_idx = indices[num_train:]
     return X[train_idx], y[train_idx], X[test_idx], y[test_idx]

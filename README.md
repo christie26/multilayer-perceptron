@@ -15,13 +15,12 @@ pip install -r requirement.txt
 Run the scripts from inside `src/` in this order:
 
 ```bash
-cd src
 ```
 
-### 1. (optional) Explore the data
+### 1. Explore the data
 
 ```bash
-python explore.py --data ../data.csv
+python src/explore.py --data ../data.csv
 ```
 
 ### 2. Prepare / split the data
@@ -29,7 +28,7 @@ python explore.py --data ../data.csv
 Reads the raw CSV, standardizes features, and writes `data_train.npz` + `data_val.npz`.
 
 ```bash
-python prepare_data.py --data ../data.csv --train_ratio 0.8
+python prepare.py --data ../data.csv --train_ratio 0.8
 ```
 
 ### 3. Train the model
