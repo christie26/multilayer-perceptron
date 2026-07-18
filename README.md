@@ -12,11 +12,6 @@ pip install -r requirement.txt
 
 ## How to run
 
-Run the scripts from inside `src/` in this order:
-
-```bash
-```
-
 ### 1. Explore the data
 
 ```bash
