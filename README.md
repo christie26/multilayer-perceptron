@@ -31,7 +31,7 @@ python src/prepare.py
 Trains the MLP and saves it to `mlp_model.npz`.
 
 ```bash
-python train.py --epochs 100 --batch_size 32 --lr 0.01 --hidden 5 10
+python src/train.py --epochs 100 --batch_size 32 --lr 0.01 --hidden 5 10
 ```
 
 ### 4. Predict / evaluate
@@ -41,19 +41,6 @@ Loads the saved model and reports accuracy on the validation set.
 ```bash
 python predict.py --data data_val.npz --model mlp_model.npz
 ```
-
-## Scripts
-
-| Script            | Purpose                                     | Key flags |
-|-------------------|---------------------------------------------|-----------|
-| `explore.py`      | EDA + plots on the raw CSV                   | `--data`, `--test_size` |
-| `prepare_data.py` | Standardize + train/val split → `.npz`      | `--data`, `--train_ratio`, `--train_out`, `--val_out` |
-| `train.py`        | Train MLP, plot metrics, save model         | `--epochs`, `--batch_size`, `--lr`, `--hidden`, `--train`, `--val`, `--model` |
-| `predict.py`      | Load model, report sigmoid/softmax accuracy | `--data`, `--model` |
-| `mlp.py`          | `MLP` class (library, not run directly)     | — |
-| `io_utils.py`     | Shared data/model load & save helpers       | — |
-
-Every script supports `-h` / `--help` for the full flag list.
 
 ## Concepts
 

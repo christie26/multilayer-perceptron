@@ -1,7 +1,7 @@
 import argparse
 
-from mlp import MLP
 from io_utils import load_dataset, save_model
+from mlp import MLP
 
 
 def main():
