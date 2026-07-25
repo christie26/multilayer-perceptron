@@ -1,5 +1,6 @@
 import argparse
 import sys
+
 import numpy as np
 
 from io_utils import load_dataset, load_model
