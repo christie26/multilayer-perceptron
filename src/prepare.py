@@ -1,4 +1,5 @@
 import argparse
+
 import numpy as np
 
 from io_utils import load_data, train_test_split
@@ -16,9 +17,7 @@ def main():
     parser.add_argument(
         "--val_out", type=str, default="data_val.npz", help="Output validation file"
     )
-    parser.add_argument(
-        "--seed", type=int, default=42, help="Random seed to shuffle"
-    )
+    parser.add_argument("--seed", type=int, default=42, help="Random seed to shuffle")
     args = parser.parse_args()
 
     X, y = load_data(args.data)

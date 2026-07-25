@@ -5,8 +5,8 @@ A from-scratch (NumPy) MLP that classifies breast-cancer diagnoses (Malignant / 
 ## Setup
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirement.txt
 ```
 
@@ -15,7 +15,7 @@ pip install -r requirement.txt
 ### 1. Explore the data
 
 ```bash
-python src/explore.py --data ../data.csv
+python src/explore.py
 ```
 
 ### 2. Prepare / split the data
@@ -23,7 +23,7 @@ python src/explore.py --data ../data.csv
 Reads the raw CSV, standardizes features, and writes `data_train.npz` + `data_val.npz`.
 
 ```bash
-python prepare.py --data ../data.csv --train_ratio 0.8
+python src/prepare.py
 ```
 
 ### 3. Train the model

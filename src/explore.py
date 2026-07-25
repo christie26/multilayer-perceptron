@@ -1,7 +1,7 @@
 import argparse
 
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
 
 # Column names
@@ -11,17 +11,14 @@ columns = ["id", "diagnosis"] + [f"feature{i}" for i in range(1, 31)]
 def main():
     parser = argparse.ArgumentParser(description="Explore the dataset")
     parser.add_argument("--data", type=str, default="data.csv", help="Input CSV file")
-    parser.add_argument(
-        "--test_size", type=float, default=0.2, help="Validation split ratio"
-    )
     args = parser.parse_args()
 
     df = pd.read_csv(args.data, names=columns)
 
     # Basic info
     print(f"Data size: {df.shape}")
-#   df.info()
-#   df.describe()
+    #   df.info()
+    #   df.describe()
 
     # Check diagnosis value distribution
     print("\nDiagnosis value counts:\n", df["diagnosis"].value_counts())
