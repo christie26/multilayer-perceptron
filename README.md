@@ -44,10 +44,82 @@ python predict.py --data data_val.npz --model mlp_model.npz
 
 ## Concepts
 
-- **Feedforward** — inputs propagate layer by layer through weighted sums + sigmoid activations.
-- **Backpropagation** — errors propagate backward to compute per-layer gradients.
-- **Gradient descent** — weights/biases updated by the gradient scaled by the learning rate.
+### Feedforward
+A process of passing input data through a neural network to generate a final prediction.
+```
+Input (X)
+      │
+      ▼
+Weight × Input + Bias
+      │
+      ▼
+ Sigmoid
+      │
+      ▼
+Hidden Layer 1
+      │
+      ▼
+Weight × Input + Bias
+      │
+      ▼
+ Sigmoid
+      │
+      ▼
+Hidden Layer 2
+      │
+      ▼
+Weight × Input + Bias
+      │
+      ▼
+ Sigmoid
+      │
+      ▼
+Output
+```
+**Weight**
 
+**Bias**
+
+**Activation Function**
+- Introduce **non-linearity** into the neural network.
+- Enable the model to learn **complex** patterns and relationships.
+- Transform the output of each neuron before passing it to the next layer.
+- Improve the network's ability to solve classification and regression problems.
+- Support backpropagation because most activation functions are differentiable.
+
+### Backpropagation
+#### Calculate loss
+errors propagate backward to compute per-layer gradients.
+
+### Gradient descent
+weights/biases updated by the gradient scaled by the learning rate.
+
+### softmax
+
+### one epoch
+```
+① Input
+      │
+      ▼
+② Feedforward
+(Input → Hidden → Output)
+      │
+      ▼
+③ Prediction
+      │
+      ▼
+④ Loss Calculation
+      │
+      ▼
+⑤ Backpropagation
+(Output → Hidden → Input)
+      │
+      ▼
+⑥ Update Weights
+      │
+      ▼
+repeat next data
+```
 ## Regex (label column extraction)
 
 ```
