@@ -6,13 +6,12 @@ import numpy as np
 from io_utils import load_dataset, load_model
 
 
-def evaluate(predicted_labels, actual_labels):
-    """Return accuracy (%) of predicted labels against the ground truth."""
-    n = len(actual_labels)
-    if n == 0:
-        return 0.0
-    correct = np.sum(predicted_labels == actual_labels)
-    return correct / n * 100
+def confusion_counts(predicted, actual):
+    tp = np.sum((predicted == 1) & (actual == 1))
+    tn = np.sum((predicted == 0) & (actual == 0))
+    fp = np.sum((predicted == 1) & (actual == 0))
+    fn = np.sum((predicted == 0) & (actual == 1))
+    return tp, tn, fp, fn
 
 
 def main():
@@ -25,22 +24,30 @@ def main():
     )
     args = parser.parse_args()
 
-    X_val, y_val = load_dataset(args.data)
+    X, y = load_dataset(args.data)
     mlp = load_model(args.model)
     if mlp is None:
         sys.exit(1)
-    actual_labels = y_val.flatten()
 
-    # ---- Predict with sigmoid ----
-    outputs = mlp.forward(X_val).flatten()
-    print(f"from sigmoid {outputs}")
-    sigmoid_labels = (outputs >= 0.5).astype(int)
-    print(f"✅ Accuracy with sigmoid: {evaluate(sigmoid_labels, actual_labels):.2f}%")
+    actual = np.argmax(y, axis=1)
+    outputs = mlp.forward(X)
+    p_malignant = outputs[:, 1]
+    predicted = np.argmax(outputs, axis=1)
 
-    # ---- Predict with softmax ----
-    _, pred_classes = mlp.predict(X_val)
-    print(f"from softmax {pred_classes}")
-    print(f"✅ Accuracy with softmax: {evaluate(pred_classes, actual_labels):.2f}%")
+    accuracy = np.mean(predicted == actual) * 100
+    bce = -np.mean(
+        actual * np.log(p_malignant + 1e-9)
+        + (1 - actual) * np.log(1 - p_malignant + 1e-9)
+    )
+
+    tp, _tn, fp, fn = confusion_counts(predicted, actual)
+    precision = tp / (tp + fp) if (tp + fp) else 0.0
+    recall = tp / (tp + fn) if (tp + fn) else 0.0
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
+
+    print(f"✅ Accuracy: {accuracy:.2f}%")
+    print(f"Binary cross-entropy: {bce:.4f}")
+    print(f"Precision: {precision:.4f}  Recall: {recall:.4f}  F1: {f1:.4f}")
 
 
 if __name__ == "__main__":

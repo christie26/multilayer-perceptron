@@ -1,6 +1,7 @@
 # Multilayer Perceptron
 
-A from-scratch (NumPy) MLP that classifies breast-cancer diagnoses (Malignant / Benign).
+From-scratch (NumPy) MLP classifying breast-cancer diagnoses (Malignant / Benign) —
+42 school project, no ML/autodiff libraries used.
 
 ## Setup
 
@@ -12,116 +13,161 @@ pip install -r requirement.txt
 
 ## How to run
 
-### 1. Explore the data
+### 1. Split the dataset
 
 ```bash
-python src/explore.py
+python src/prepare.py --data data.csv --train_ratio 0.8 --seed 42
 ```
 
-### 2. Prepare / split the data
+Reads the raw CSV, standardizes features, writes `data_train.npz` + `data_val.npz`.
+`--seed` makes the split repeatable (same shuffle every run).
 
-Reads the raw CSV, standardizes features, and writes `data_train.npz` + `data_val.npz`.
+### 2. Train
 
 ```bash
-python src/prepare.py
+python src/train.py \
+  --epochs 100 \
+  --batch_size 32 \
+  --lr 0.01 \
+  --hidden 5 10 \
+  --loss categoricalCrossentropy \
+  --activation sigmoid \
+  --optimizer adam \
+  --patience 10
 ```
 
-### 3. Train the model
+Trains the MLP (≥2 hidden layers, softmax output), prints train/val loss every
+epoch, shows loss + accuracy curves at the end, and saves the model
+(topology + weights) to `mlp_model.npz` and metrics history to `mlp_history.json`.
 
-Trains the MLP and saves it to `mlp_model.npz`.
+| Flag | Meaning |
+| --- | --- |
+| `--hidden` | size of each hidden layer, e.g. `5 10` = two hidden layers |
+| `--optimizer` | `sgd`, `momentum`, `rmsprop`, or `adam` (bonus, default `sgd`) |
+| `--patience` | early-stopping patience in epochs (bonus, `0` = disabled) |
+
+### 3. Predict / evaluate
 
 ```bash
-python src/train.py --epochs 100 --batch_size 32 --lr 0.01 --hidden 5 10
+python src/predict.py --data data_val.npz --model mlp_model.npz
 ```
 
-### 4. Predict / evaluate
+Loads the saved model, predicts on the given set, reports accuracy, binary
+cross-entropy, precision, recall, and F1.
 
-Loads the saved model and reports accuracy on the validation set.
+### 4. Compare multiple runs 
 
 ```bash
-python predict.py --data data_val.npz --model mlp_model.npz
+python src/compare.py --runs "small:5,10:0.01:sgd" "big:20,20:0.001:adam"
 ```
+
+Trains each `name:hidden_sizes:lr:optimizer` spec and plots all validation-loss
+curves on one graph, for comparing configurations side by side.
 
 ## Concepts
 
+### Perceptron
+
+The base unit of the network: one neuron with one or more inputs, an activation
+function, and a single output. Two steps produce its output:
+
+1. **Weighted sum** — `z = Σ(xₖ · wₖ) + bias`, over all `N` inputs of the previous
+   layer.
+2. **Activation** — `a = f(z)`, squashing `z` into the neuron's output range.
+
+### Weights, bias, and initialization
+
+- **Weight** — a learned parameter scaling one input's contribution to the
+  weighted sum.
+- **Bias** — a learned constant added to the weighted sum; shifts the
+  activation threshold independently of the inputs (implemented as an always-on
+  "neuron" with output 1).
+- **He initialization** (`initialize_weights`, `mlp.py`) — weights are drawn as
+  `W ~ N(0, 2/fan_in)`, the default here since it pairs well with sigmoid/ReLU
+  hidden layers and keeps gradients from vanishing/exploding at the first
+  forward pass.
+
+### Activation functions
+
+Introduce non-linearity, so the network can model more than a linear
+decision boundary, and must be differentiable so backpropagation can compute
+gradients through them.
+
+- **Sigmoid** — `σ(z) = 1 / (1 + e⁻ᶻ)`, used on hidden layers. Its derivative,
+  needed during backpropagation, is `σ'(z) = σ(z) · (1 − σ(z))`.
+- **Softmax** — `softmax(z)ᵢ = eᶻⁱ / Σⱼ eᶻʲ`, used on the output layer only. It
+  turns the two raw output scores into a probability distribution over the two
+  classes (Malignant / Benign) that sums to 1.
+
 ### Feedforward
-A process of passing input data through a neural network to generate a final prediction.
-```
-Input (X)
-      │
-      ▼
-Weight × Input + Bias
-      │
-      ▼
- Sigmoid
-      │
-      ▼
-Hidden Layer 1
-      │
-      ▼
-Weight × Input + Bias
-      │
-      ▼
- Sigmoid
-      │
-      ▼
-Hidden Layer 2
-      │
-      ▼
-Weight × Input + Bias
-      │
-      ▼
- Sigmoid
-      │
-      ▼
-Output
-```
-**Weight**
 
-**Bias**
+The forward pass: data flows input → hidden layer(s) → output, one layer at a
+time, each computing `a⁽ˡ⁾ = f(a⁽ˡ⁻¹⁾ · W⁽ˡ⁾ + b⁽ˡ⁾)`. No information flows
+backward during this step — hence "feedforward".
 
-**Activation Function**
-- Introduce **non-linearity** into the neural network.
-- Enable the model to learn **complex** patterns and relationships.
-- Transform the output of each neuron before passing it to the next layer.
-- Improve the network's ability to solve classification and regression problems.
-- Support backpropagation because most activation functions are differentiable.
+### Loss function — categorical cross-entropy
+
+Measures how far the predicted probability distribution is from the true
+one-hot label; the number minimized during training.
+
+`loss = -mean(Σ y · log(p))` over the two classes, per example.
+
+`predict.py` additionally reports the equivalent **binary cross-entropy**
+form the subject asks for:
+`E = -1/N · Σ [yₙ·log(pₙ) + (1-yₙ)·log(1-pₙ)]`, where `p` is the predicted
+probability of the Malignant class.
 
 ### Backpropagation
-#### Calculate loss
-errors propagate backward to compute per-layer gradients.
+
+Propagates the loss backward through the network, layer by layer, using the
+**chain rule** to compute each weight's gradient (`∂loss/∂W`) without
+recomputing the whole forward pass per weight. For a softmax output paired with
+cross-entropy loss, the two gradients simplify into a single term:
+`∂loss/∂z_output = output − y`. That error is then pushed back through each
+hidden layer as `δ⁽ˡ⁻¹⁾ = (δ⁽ˡ⁾ · W⁽ˡ⁾ᵀ) · σ'(a⁽ˡ⁻¹⁾)`.
 
 ### Gradient descent
-weights/biases updated by the gradient scaled by the learning rate.
 
-### softmax
+Updates each weight/bias in the direction that reduces the loss, scaled by the
+**learning rate** (`--lr`): `w -= lr · ∂loss/∂w`. Training here uses
+**mini-batch gradient descent** (`--batch_size`): gradients are averaged over a
+small batch of examples rather than one example (noisy, slow) or the whole
+dataset (stable, slow) at a time.
 
-### one epoch
-```
-① Input
-      │
-      ▼
-② Feedforward
-(Input → Hidden → Output)
-      │
-      ▼
-③ Prediction
-      │
-      ▼
-④ Loss Calculation
-      │
-      ▼
-⑤ Backpropagation
-(Output → Hidden → Input)
-      │
-      ▼
-⑥ Update Weights
-      │
-      ▼
-repeat next data
-```
-## Regex (label column extraction)
+### Optimizers 
+
+Alternatives to plain gradient descent that use a running average of past
+gradients to take smarter steps, selected with `--optimizer`:
+
+- **Momentum** — accumulates a velocity `v = β·v + (1-β)·grad`, then steps by
+  `v`; smooths out oscillations.
+- **RMSprop** — divides each step by a running average of squared gradients,
+  so parameters with noisy/large gradients get smaller steps.
+- **Adam** — combines momentum (first moment) and RMSprop (second moment),
+  with bias-correction terms (`/ (1 - βᵗ)`) so early steps aren't
+  underestimated.
+
+### Early stopping 
+
+Halts training once validation loss stops improving for `--patience`
+consecutive epochs, keeping the model from overfitting to the training set
+after it has stopped generalizing.
+
+### Evaluation metrics 
+
+`predict.py` reports, from the confusion counts (TP/TN/FP/FN) of predicted vs.
+actual labels:
+
+- **Accuracy** — `(TP + TN) / total`.
+- **Precision** — `TP / (TP + FP)`: of predicted-Malignant, how many really are.
+- **Recall** — `TP / (TP + FN)`: of actually-Malignant, how many were caught.
+- **F1** — `2 · precision · recall / (precision + recall)`: harmonic mean of
+  the two, useful when class counts are imbalanced.
+
+## Training loop (one epoch)
 
 ```
-(?<=^[^,]*,[^,]*,[^,]*,[^,]*,[^,]*),.*
+Input → Feedforward (Input → Hidden → Output) → Prediction
+      → Loss calculation → Backpropagation (Output → Hidden → Input)
+      → Gradient descent update → repeat next batch
 ```
