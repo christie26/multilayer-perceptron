@@ -66,6 +66,61 @@ curves on one graph, for comparing configurations side by side.
 
 ## Concepts
 
+### Train process
+
+#### Epoch
+
+One full pass over the entire training set (all mini-batches). `--epochs`
+sets how many passes to run; per-epoch train/val loss is printed as
+`epoch NN/total - loss: .. - val_loss: ..`.
+
+#### Batch size
+
+Number of examples processed together before one gradient-descent weight
+update (`--batch_size`). Smaller batches update more often per epoch but with
+noisier gradients; larger batches give smoother but slower updates.
+
+#### Learning rate
+
+Scale factor (`--lr`) applied to the gradient before updating each weight:
+`w -= lr · ∂loss/∂w`. Too high and the loss diverges; too low and training
+crawls.
+
+#### Hidden layer
+
+A layer of neurons between input and output, not directly observed
+(`--hidden`, e.g. `--hidden 5 10` = two hidden layers of size 5 and 10). The
+subject requires at least two by default.
+
+#### Loss
+
+The value training minimizes each epoch. Here: categorical cross-entropy,
+`loss = -mean(Σ y · log(p))` (`--loss`) — see "Loss function" below for the
+full explanation.
+
+#### Activation
+
+Function applied to each neuron's weighted sum before it's passed to the
+next layer (`--activation` for hidden layers; the output layer is always
+softmax, not configurable).
+
+##### Sigmoid
+
+`σ(z) = 1 / (1 + e⁻ᶻ)`. Used on hidden layers. Squashes any input to `(0, 1)`;
+its derivative `σ'(z) = σ(z) · (1 − σ(z))` is what backpropagation uses to
+push the error back through the layer.
+
+##### Softmax
+
+`softmax(z)ᵢ = eᶻⁱ / Σⱼ eᶻʲ`. Used on the output layer only. Turns the two raw
+output scores into a probability distribution over Malignant/Benign that sums
+to 1.
+
+#### Early stop
+
+Stops training once validation loss hasn't improved for `--patience`
+consecutive epochs (`0` = disabled) — see "Early stopping" below.
+
 ### Perceptron
 
 The base unit of the network: one neuron with one or more inputs, an activation
@@ -86,18 +141,6 @@ function, and a single output. Two steps produce its output:
   `W ~ N(0, 2/fan_in)`, the default here since it pairs well with sigmoid/ReLU
   hidden layers and keeps gradients from vanishing/exploding at the first
   forward pass.
-
-### Activation functions
-
-Introduce non-linearity, so the network can model more than a linear
-decision boundary, and must be differentiable so backpropagation can compute
-gradients through them.
-
-- **Sigmoid** — `σ(z) = 1 / (1 + e⁻ᶻ)`, used on hidden layers. Its derivative,
-  needed during backpropagation, is `σ'(z) = σ(z) · (1 − σ(z))`.
-- **Softmax** — `softmax(z)ᵢ = eᶻⁱ / Σⱼ eᶻʲ`, used on the output layer only. It
-  turns the two raw output scores into a probability distribution over the two
-  classes (Malignant / Benign) that sums to 1.
 
 ### Feedforward
 
