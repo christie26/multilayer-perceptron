@@ -1,4 +1,6 @@
+import csv
 import json
+import os
 import sys
 
 import numpy as np
@@ -126,3 +128,19 @@ def load_history(filename):
     """Load a previously saved training history JSON file."""
     with open(filename, "r") as f:
         return json.load(f)
+
+
+def append_run_log(csv_path, row):
+    """Append one run's tag/hyperparameters/timestamp as a row to the shared run-log CSV."""
+    file_exists = os.path.exists(csv_path)
+    with open(csv_path, "a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=list(row.keys()))
+        if not file_exists:
+            writer.writeheader()
+        writer.writerow(row)
+
+
+def load_run_log(csv_path):
+    """Read the run-log CSV and return a list of row dicts."""
+    with open(csv_path, "r", newline="") as f:
+        return list(csv.DictReader(f))

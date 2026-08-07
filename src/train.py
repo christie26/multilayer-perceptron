@@ -1,6 +1,7 @@
 import argparse
+import datetime
 
-from io_utils import load_dataset, save_history, save_model
+from io_utils import append_run_log, load_dataset, save_history, save_model
 from mlp import MLP
 
 
@@ -56,19 +57,20 @@ def main():
         "--val", type=str, default="data_val.npz", help="Validation dataset file"
     )
     parser.add_argument(
-        "--model",
+        "--run_log",
         type=str,
-        default="mlp_model.npz",
-        help="Path to save the trained model",
-    )
-    parser.add_argument(
-        "--history",
-        type=str,
-        default="mlp_history.json",
-        help="Path to save the training history",
+        default="tag.csv",
+        help="Path to the CSV log recording every run's tag, hyperparameters and timestamp",
     )
     args = parser.parse_args()
 
+    timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    hidden_str = "-".join(map(str, args.hidden))
+    tag = f"{args.optimizer}_h{hidden_str}_lr{args.lr}_{timestamp}"
+    model_path = f"mlp_model_{tag}.npz"
+    history_path = f"mlp_history_{tag}.json"
+
+    print(f"Tag : {tag}\n")
     print(f"Epochs : {args.epochs}")
     print(f"Batch size : {args.batch_size}")
     print(f"Learning rate : {args.lr}\n")
@@ -81,7 +83,7 @@ def main():
     X_val, y_val = load_dataset(args.val)
     print(f"Train file: {args.train}")
     print(f"Validation file: {args.val}")
-    print(f"Model path : {args.model}\n")
+    print(f"Model path : {model_path}\n")
 
     input_size = X_train.shape[1]
     mlp = MLP(
@@ -99,10 +101,28 @@ def main():
     )
     mlp.plot_metrics()
 
-    save_model(mlp, args.model)
-    save_history(mlp, args.history)
-    print(f"✅ Model saved to {args.model}")
-    print(f"✅ History saved to {args.history}")
+    save_model(mlp, model_path)
+    save_history(mlp, history_path)
+    append_run_log(
+        args.run_log,
+        {
+            "tag": tag,
+            "timestamp": timestamp,
+            "optimizer": args.optimizer,
+            "hidden_sizes": hidden_str,
+            "learning_rate": args.lr,
+            "batch_size": args.batch_size,
+            "epochs": args.epochs,
+            "patience": args.patience,
+            "activation": args.activation,
+            "loss": args.loss,
+            "model_file": model_path,
+            "history_file": history_path,
+        },
+    )
+    print(f"✅ Model saved to {model_path}")
+    print(f"✅ History saved to {history_path}")
+    print(f"✅ Run logged in {args.run_log} (tag: {tag})")
 
 
 if __name__ == "__main__":
