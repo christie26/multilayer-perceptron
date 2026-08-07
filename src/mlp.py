@@ -17,6 +17,7 @@ def softmax(x):
 
 
 def cross_entropy(y_true, y_pred):
+    # loss = -mean(Σ y · log(p))
     return -np.mean(np.sum(y_true * np.log(y_pred + 1e-9), axis=1))
 
 

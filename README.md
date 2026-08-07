@@ -130,18 +130,6 @@ Updates each weight/bias in the direction that reduces the loss, scaled by the
 small batch of examples rather than one example (noisy, slow) or the whole
 dataset (stable, slow) at a time.
 
-### Loss function — categorical cross-entropy
-
-Measures how far the predicted probability distribution is from the true
-one-hot label; the number minimized during training.
-
-`loss = -mean(Σ y · log(p))` over the two classes, per example.
-
-`predict.py` additionally reports the equivalent **binary cross-entropy**
-form the subject asks for:
-`E = -1/N · Σ [yₙ·log(pₙ) + (1-yₙ)·log(1-pₙ)]`, where `p` is the predicted
-probability of the Malignant class.
-
 ### Optimizers
 
 Alternatives to plain gradient descent that use a running average of past
@@ -154,6 +142,19 @@ gradients to take smarter steps, selected with `--optimizer`:
 - **Adam** — combines momentum (first moment) and RMSprop (second moment),
   with bias-correction terms (`/ (1 - βᵗ)`) so early steps aren't
   underestimated.
+
+### Loss function — categorical cross-entropy
+
+Measures how far the predicted probability distribution is from the true
+one-hot label; the number minimized during training.
+
+`loss = -mean(Σ y · log(p))` over the two classes, per example.
+
+`predict.py` additionally reports the equivalent **binary cross-entropy**
+form the subject asks for:
+`E = -1/N · Σ [yₙ·log(pₙ) + (1-yₙ)·log(1-pₙ)]`, where `p` is the predicted
+probability of the Malignant class.
+
 
 ### Early stopping
 
