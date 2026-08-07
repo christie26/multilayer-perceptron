@@ -87,6 +87,8 @@ class MLP:
             weights.append(W)
             biases.append(b)
 
+        # print("Initial weights", weights)
+        # print("Initial biases", biases)
         return weights, biases
 
     def _init_optimizer_state(self):
@@ -182,7 +184,7 @@ class MLP:
                 X = X[indices]
                 y = y[indices]
 
-            # ---- Mini-batch training ----
+            # ---- Train ----
             for start in range(0, n_samples, self.batch_size):
                 end = start + self.batch_size
                 X_batch = X[start:end]
@@ -191,7 +193,7 @@ class MLP:
                 output = self.forward(X_batch)
                 self.backward(y_batch, output)
 
-            # ---- Metrics after epoch ----
+            # ---- Evaluation ----
             train_output = self.forward(X)
             train_loss = cross_entropy(y, train_output)
             train_acc = accuracy(y, train_output)

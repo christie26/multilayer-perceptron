@@ -84,16 +84,16 @@ function, and a single output. Two steps produce its output:
 Values set before training starts (not learned):
 
 - **Hidden layer** — a layer of neurons between input and output, not directly
-  observed (`--hidden`, e.g. `--hidden 5 10` = two hidden layers of size 5 and
+  observed (`--hidden 5 10` = two hidden layers of size 5 and
   10). The subject requires at least two by default.
 - **Epoch** — one complete pass of the training set through the model:
   every sample is fed forward, the loss is computed, and weights are updated
   via backpropagation.
-- **Batch size** (`--batch_size`) — number of examples processed together
+- **Batch size** — number of examples processed together
   before one gradient-descent weight update. Smaller batches update more often
   per epoch but with noisier gradients; larger batches give smoother but
   slower updates.
-- **Learning rate** (`--lr`) — scale factor applied to the gradient before
+- **Learning rate** — scale factor applied to the gradient before
   updating each weight (`w -= lr · ∂loss/∂w`). Too high and the loss diverges;
   too low and training crawls.
 
@@ -112,18 +112,6 @@ softmax):
   Turns the two raw output scores into a probability distribution over
   Malignant/Benign that sums to 1.
 
-### Loss function — categorical cross-entropy
-
-Measures how far the predicted probability distribution is from the true
-one-hot label; the number minimized during training.
-
-`loss = -mean(Σ y · log(p))` over the two classes, per example.
-
-`predict.py` additionally reports the equivalent **binary cross-entropy**
-form the subject asks for:
-`E = -1/N · Σ [yₙ·log(pₙ) + (1-yₙ)·log(1-pₙ)]`, where `p` is the predicted
-probability of the Malignant class.
-
 ### Backpropagation
 
 The **gradient** (`∂loss/∂W`) is how much each weight contributed to the loss.
@@ -141,6 +129,18 @@ Updates each weight/bias in the direction that reduces the loss, scaled by the
 **mini-batch gradient descent** (`--batch_size`): gradients are averaged over a
 small batch of examples rather than one example (noisy, slow) or the whole
 dataset (stable, slow) at a time.
+
+### Loss function — categorical cross-entropy
+
+Measures how far the predicted probability distribution is from the true
+one-hot label; the number minimized during training.
+
+`loss = -mean(Σ y · log(p))` over the two classes, per example.
+
+`predict.py` additionally reports the equivalent **binary cross-entropy**
+form the subject asks for:
+`E = -1/N · Σ [yₙ·log(pₙ) + (1-yₙ)·log(1-pₙ)]`, where `p` is the predicted
+probability of the Malignant class.
 
 ### Optimizers
 
