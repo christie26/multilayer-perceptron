@@ -71,17 +71,17 @@ def main():
 
     print(f"Epochs : {args.epochs}")
     print(f"Batch size : {args.batch_size}")
-    print(f"Learning rate : {args.lr}")
+    print(f"Learning rate : {args.lr}\n")
     print(f"Sizes of hidden layers : {args.hidden}")
     print(f"Loss : {args.loss}")
     print(f"Activation : {args.activation}")
-    print(f"Optimizer : {args.optimizer}")
-    print(f"Model path : {args.model}\n")
+    print(f"Optimizer : {args.optimizer}\n")
 
     X_train, y_train = load_dataset(args.train)
     X_val, y_val = load_dataset(args.val)
     print(f"Train file: {args.train}")
-    print(f"Validation file: {args.val}\n")
+    print(f"Validation file: {args.val}")
+    print(f"Model path : {args.model}\n")
 
     input_size = X_train.shape[1]
     mlp = MLP(
