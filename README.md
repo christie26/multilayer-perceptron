@@ -20,31 +20,20 @@ python src/prepare.py --data data.csv --train_ratio 0.8 --seed 42
 ```
 
 Reads the raw CSV, standardizes features, writes `data_train.npz` + `data_val.npz`.
-`--seed` makes the split repeatable (same shuffle every run).
+`seed` makes the split repeatable (same shuffle every run).
 
 ### 2. Train
 
 ```bash
 python src/train.py \
-  --epochs 100 \
-  --batch_size 32 \
-  --lr 0.01 \
-  --hidden 5 10 \
-  --loss categoricalCrossentropy \
-  --activation sigmoid \
-  --optimizer adam \
-  --patience 10
+  --epochs 100 --batch_size 32 --lr 0.01 --hidden 5 10 \
+  --loss categoricalCrossentropy --activation sigmoid \
+  --optimizer adam --patience 10
 ```
 
 Trains the MLP (≥2 hidden layers, softmax output), prints train/val loss every
 epoch, shows loss + accuracy curves at the end, and saves the model
 (topology + weights) to `mlp_model.npz` and metrics history to `mlp_history.json`.
-
-| Flag | Meaning |
-| --- | --- |
-| `--hidden` | size of each hidden layer, e.g. `5 10` = two hidden layers |
-| `--optimizer` | `sgd`, `momentum`, `rmsprop`, or `adam` (bonus, default `sgd`) |
-| `--patience` | early-stopping patience in epochs (bonus, `0` = disabled) |
 
 ### 3. Predict / evaluate
 
@@ -66,60 +55,8 @@ curves on one graph, for comparing configurations side by side.
 
 ## Concepts
 
-### Train process
-
-#### Epoch
-
-One full pass over the entire training set (all mini-batches). `--epochs`
-sets how many passes to run; per-epoch train/val loss is printed as
-`epoch NN/total - loss: .. - val_loss: ..`.
-
-#### Batch size
-
-Number of examples processed together before one gradient-descent weight
-update (`--batch_size`). Smaller batches update more often per epoch but with
-noisier gradients; larger batches give smoother but slower updates.
-
-#### Learning rate
-
-Scale factor (`--lr`) applied to the gradient before updating each weight:
-`w -= lr · ∂loss/∂w`. Too high and the loss diverges; too low and training
-crawls.
-
-#### Hidden layer
-
-A layer of neurons between input and output, not directly observed
-(`--hidden`, e.g. `--hidden 5 10` = two hidden layers of size 5 and 10). The
-subject requires at least two by default.
-
-#### Loss
-
-The value training minimizes each epoch. Here: categorical cross-entropy,
-`loss = -mean(Σ y · log(p))` (`--loss`) — see "Loss function" below for the
-full explanation.
-
-#### Activation
-
-Function applied to each neuron's weighted sum before it's passed to the
-next layer (`--activation` for hidden layers; the output layer is always
-softmax, not configurable).
-
-##### Sigmoid
-
-`σ(z) = 1 / (1 + e⁻ᶻ)`. Used on hidden layers. Squashes any input to `(0, 1)`;
-its derivative `σ'(z) = σ(z) · (1 − σ(z))` is what backpropagation uses to
-push the error back through the layer.
-
-##### Softmax
-
-`softmax(z)ᵢ = eᶻⁱ / Σⱼ eᶻʲ`. Used on the output layer only. Turns the two raw
-output scores into a probability distribution over Malignant/Benign that sums
-to 1.
-
-#### Early stop
-
-Stops training once validation loss hasn't improved for `--patience`
-consecutive epochs (`0` = disabled) — see "Early stopping" below.
+Ordered as they occur in a training run: unit → parameters → hyperparameters →
+forward pass → loss → backward pass → weight update → stopping → evaluation.
 
 ### Perceptron
 
@@ -142,11 +79,38 @@ function, and a single output. Two steps produce its output:
   hidden layers and keeps gradients from vanishing/exploding at the first
   forward pass.
 
+### Hyperparameters
+
+Values set before training starts (not learned):
+
+- **Hidden layer** — a layer of neurons between input and output, not directly
+  observed (`--hidden`, e.g. `--hidden 5 10` = two hidden layers of size 5 and
+  10). The subject requires at least two by default.
+- **Epoch** — one complete pass of the training set through the model:
+  every sample is fed forward, the loss is computed, and weights are updated
+  via backpropagation.
+- **Batch size** (`--batch_size`) — number of examples processed together
+  before one gradient-descent weight update. Smaller batches update more often
+  per epoch but with noisier gradients; larger batches give smoother but
+  slower updates.
+- **Learning rate** (`--lr`) — scale factor applied to the gradient before
+  updating each weight (`w -= lr · ∂loss/∂w`). Too high and the loss diverges;
+  too low and training crawls.
+
 ### Feedforward
 
 The forward pass: data flows input → hidden layer(s) → output, one layer at a
 time, each computing `a⁽ˡ⁾ = f(a⁽ˡ⁻¹⁾ · W⁽ˡ⁾ + b⁽ˡ⁾)`. No information flows
-backward during this step — hence "feedforward".
+backward during this step — hence "feedforward". `f` is the **activation
+function** (`--activation` for hidden layers; the output layer is always
+softmax):
+
+- **Sigmoid** — `σ(z) = 1 / (1 + e⁻ᶻ)`. Used on hidden layers. Squashes any
+  input to `(0, 1)`; its derivative `σ'(z) = σ(z) · (1 − σ(z))` is what
+  backpropagation uses to push the error back through the layer.
+- **Softmax** — `softmax(z)ᵢ = eᶻⁱ / Σⱼ eᶻʲ`. Used on the output layer only.
+  Turns the two raw output scores into a probability distribution over
+  Malignant/Benign that sums to 1.
 
 ### Loss function — categorical cross-entropy
 
@@ -162,8 +126,9 @@ probability of the Malignant class.
 
 ### Backpropagation
 
-Propagates the loss backward through the network, layer by layer, using the
-**chain rule** to compute each weight's gradient (`∂loss/∂W`) without
+The **gradient** (`∂loss/∂W`) is how much each weight contributed to the loss.
+Backpropagation computes it for every weight by propagating the loss backward
+through the network, layer by layer, using the **chain rule** — without
 recomputing the whole forward pass per weight. For a softmax output paired with
 cross-entropy loss, the two gradients simplify into a single term:
 `∂loss/∂z_output = output − y`. That error is then pushed back through each
@@ -177,7 +142,7 @@ Updates each weight/bias in the direction that reduces the loss, scaled by the
 small batch of examples rather than one example (noisy, slow) or the whole
 dataset (stable, slow) at a time.
 
-### Optimizers 
+### Optimizers
 
 Alternatives to plain gradient descent that use a running average of past
 gradients to take smarter steps, selected with `--optimizer`:
@@ -190,13 +155,13 @@ gradients to take smarter steps, selected with `--optimizer`:
   with bias-correction terms (`/ (1 - βᵗ)`) so early steps aren't
   underestimated.
 
-### Early stopping 
+### Early stopping
 
 Halts training once validation loss stops improving for `--patience`
-consecutive epochs, keeping the model from overfitting to the training set
-after it has stopped generalizing.
+consecutive epochs (`0` = disabled), keeping the model from overfitting to the
+training set after it has stopped generalizing.
 
-### Evaluation metrics 
+### Evaluation metrics
 
 `predict.py` reports, from the confusion counts (TP/TN/FP/FN) of predicted vs.
 actual labels:
