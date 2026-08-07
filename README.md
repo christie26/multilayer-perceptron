@@ -1,7 +1,6 @@
 # Multilayer Perceptron
 
-From-scratch (NumPy) MLP classifying breast-cancer diagnoses (Malignant / Benign) —
-42 school project, no ML/autodiff libraries used.
+From-scratch (NumPy) MLP classifying breast-cancer diagnoses (Malignant / Benign)
 
 ## Setup
 
@@ -26,7 +25,7 @@ Reads the raw CSV, standardizes features, writes `data_train.npz` + `data_val.np
 
 ```bash
 python src/train.py \
-  --epochs 100 --batch_size 32 --lr 0.01 --hidden 5 10 \
+  --epochs 100 --batch_size 32 --lr 0.01 --hidden 5 10 7 \
   --loss categoricalCrossentropy --activation sigmoid \
   --optimizer adam --patience 10
 ```
@@ -47,11 +46,12 @@ cross-entropy, precision, recall, and F1.
 ### 4. Compare multiple runs 
 
 ```bash
-python src/compare.py --runs "small:5,10:0.01:sgd" "big:20,20:0.001:adam"
+python src/compare.py --run_log tag.csv --tags small big
 ```
 
-Trains each `name:hidden_sizes:lr:optimizer` spec and plots all validation-loss
-curves on one graph, for comparing configurations side by side.
+Reads tags from the run log (default: `tag.csv`, all tags if `--tags` is
+omitted), loads each run's saved history, and plots validation-loss curves
+together. Missing history files are skipped with a warning.
 
 ## Concepts
 
