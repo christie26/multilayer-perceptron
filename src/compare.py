@@ -29,7 +29,11 @@ def main():
 
     plt.figure(figsize=(7, 5))
     for run in runs:
-        history = load_history(run["history_file"])
+        try:
+            history = load_history(run["history_file"])
+        except FileNotFoundError:
+            print(f"⚠️  Skipping '{run['tag']}': {run['history_file']} not found")
+            continue
         plt.plot(history["val_loss"], label=run["tag"])
 
     plt.xlabel("Epoch")
